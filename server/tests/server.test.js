@@ -25,7 +25,7 @@ describe('POST / Todos', ()=>{
                 if(err){
                     return done(err);
                 }
-        //loop through all the todos in database and check if there is only one data and data matches the test input
+        //loop through all the todos in database and check if there is only one todo and data matches the test input
         Todo.find().then((todos) => {
           expect(todos.length).toBe(1);
           expect(todos[0].text).toBe(text);
