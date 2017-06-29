@@ -1,3 +1,4 @@
+const {ObjectID} = require('mongodb');
 const expect = require('expect');
 const request = require('supertest');
 
@@ -5,7 +6,7 @@ const {app} = require('./../server');
 const {Todo} = require('./../models/todos');
 
 
-const todos = [{text: "First Test Todo"}, {text: "Second Test Todo"}];
+const todos = [{_id: new ObjectID(), text: "First Test Todo"}, {_id: new ObjectID(), text: "Second Test Todo"}];
 
 //remove all the todos before running each test
 beforeEach((done)=> {
@@ -62,13 +63,45 @@ describe('POST / Todos', ()=>{
 
 
 describe('GET /todos', ()=>{
-    it('Should get all the todos', ()=>{
+    it('Should get all the todos', (done)=>{
         request(app)
         .get('/todos')
         .expect(200)
         .expect((res) => {
             expect(res.body.todos.length).toBe(2);
         })
-        .end( ()=> done())
+        .end( ()=> done());
     });
+});
+
+describe('GET /todos/:id', ()=>{
+
+    it('Should return todo document', (done)=> {
+
+        request(app)
+        .get(`/todos/${todos[0]._id.toHexString()}`)
+        .expect(200)
+        .expect( (res)=> {
+            expect(res.body.todo.text).toBe(todos[0].text);
+        })
+        .end( ()=> done());
+
+    });
+
+    it('Should return 404 if id not found', (done)=>{
+        var newid = new ObjectID().toHexString();
+        request(app)
+        .get(`/todos/${newid}`)
+        .expect(404)
+        .end(done);
+    });
+
+
+    it('Should return 404 if id is a non-object id', (done)=>{
+        request(app)
+        .get('/todos/123')
+        .expect(404)
+        .end(done);
+    });
+
 });
