@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 app.post('/todos', (req, res)=>{
     //console.log(req.body);
     var newTodo = new Todo({text: req.body.text});
-
+    //mongodb command to save the new todo
     newTodo.save().then((doc)=>{
         res.send(doc);
     }, (err)=>{
@@ -23,7 +23,7 @@ app.post('/todos', (req, res)=>{
 });
 
 app.get('/todos', (req, res)=>{
-
+    //mongodb command to get all todos
     Todo.find().then((todos) =>{
         res.send({todos});
     }, (err)=>{

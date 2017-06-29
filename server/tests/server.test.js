@@ -4,9 +4,14 @@ const request = require('supertest');
 const {app} = require('./../server'); 
 const {Todo} = require('./../models/todos');
 
+
+const todos = [{text: "First Test Todo"}, {text: "Second Test Todo"}];
+
 //remove all the todos before running each test
 beforeEach((done)=> {
-    Todo.remove({}).then( ()=> done());
+    Todo.remove({}).then( ()=> {
+        return Todo.insertMany(todos);
+    }).then(()=> done());
 });
 
 describe('POST / Todos', ()=>{
@@ -26,7 +31,7 @@ describe('POST / Todos', ()=>{
                     return done(err);
                 }
         //loop through all the todos in database and check if there is only one todo and data matches the test input
-        Todo.find().then((todos) => {
+        Todo.find({text}).then((todos) => {
           expect(todos.length).toBe(1);
           expect(todos[0].text).toBe(text);
           done();
@@ -47,10 +52,23 @@ describe('POST / Todos', ()=>{
             }
 
             Todo.find().then((todos) => {
-                expect(todos.length).toBe(0);
+                expect(todos.length).toBe(2);
                 done();
             }).catch((e)=> done(e));
         });
     });
 
+});
+
+
+describe('GET /todos', ()=>{
+    it('Should get all the todos', ()=>{
+        request(app)
+        .get('/todos')
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todos.length).toBe(2);
+        })
+        .end( ()=> done())
+    });
 });
