@@ -8,6 +8,8 @@ var {User} = require('./models/users');
 
 var app = express();
 
+var port = process.env.PORT || 3000;
+
 //assigning bodyWare.json() middleware which is a function that parses the http body request of express server and combine it with express req
 app.use(bodyParser.json());
 
@@ -53,8 +55,8 @@ app.get('/todos/:id', (req, res)=>{
 
 });
 
-app.listen(3000, ()=>{
-    console.log('Server Running at port 3000');
+app.listen(port, ()=>{
+    console.log(`Server Running at port ${port}`);
 });
 
 module.exports = {app};
