@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const {ObjectID} = require('mongodb');
 const expect = require('expect');
 const request = require('supertest');
@@ -7,7 +6,18 @@ const {app} = require('./../server');
 const {Todo} = require('./../models/todos');
 
 
-const todos = [{_id: new ObjectID(), text: "First Test Todo"}, {_id: new ObjectID(), text: "Second Test Todo"}];
+const todos = [
+    {
+        _id: new ObjectID(), 
+        text: "First Test Todo", 
+    }, 
+    {
+        _id: new ObjectID(), 
+        text: "Second Test Todo",
+        "completed": true, 
+        "completedAt" : 333
+    }
+    ];
 
 //remove all the todos before running each test
 beforeEach((done)=> {
@@ -145,4 +155,40 @@ describe('DELETE /todos/:id', ()=>{
         .expect(404)
         .end(done);
     });
+});
+
+
+describe('PATCH /todos/:id', ()=> {
+
+it('Should update the todo', (done) => {
+    var id = todos[0]._id.toHexString();
+
+    request(app)
+    .patch(`/todos/${id}`)
+    .send({"text": "Updated Text field", "completed": true})
+    .expect(200)
+    .expect( (res)=>{
+        expect(res.body.todo.text).toBe('Updated Text field');
+        expect(res.body.todo.completed).toBe(true);
+        expect(res.body.todo.completedAt).toBeA('number');
+    })
+    .end(done);
+
+});
+
+it('Should clear the completedAt if completed is false ', (done)=> {
+    var id = todos[1]._id.toHexString();
+
+    request(app)
+    .patch(`/todos/${id}`)
+    .send({"text": "Updated 2nd Text Field", "completed" : false})
+    .expect(200)
+    .expect( (res)=> {
+        expect(res.body.todo.text).toBe("Updated 2nd Text Field");
+        expect(res.body.todo.completed).toBe(false);
+        expect(res.body.todo.completedAt).toNotExist();
+    })
+    .end(done);
+});
+
 });
