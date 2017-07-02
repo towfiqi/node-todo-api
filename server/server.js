@@ -1,3 +1,4 @@
+require('./config/config.js');
 const _ = require('lodash');
 const {ObjectID} = require('mongodb');
 const express = require('express');
@@ -9,7 +10,7 @@ var {User} = require('./models/users');
 
 var app = express();
 
-var port = process.env.PORT || 3000;
+var port = process.env.PORT;
 
 //assigning bodyWare.json() middleware which is a function that parses the http body request of express server and combine it with express req
 app.use(bodyParser.json());
@@ -102,6 +103,23 @@ app.patch('/todos/:id', (req, res)=>{
     }, (err)=> {
         return res.status(404).send();
     });
+
+});
+
+//Create New User
+app.post('/users', (req, res)=>{
+    
+    var body = _.pick(req.body, ['name','email','password']);
+    var newUser = new User(body);
+
+    newUser.save().then( ()=> {
+        return newUser.generateAuthToken();
+    }).then( (token)=> {
+        res.header('x-auth', token).send(newUser); 
+    }).catch((err)=> {
+        res.status(404).send(err);
+    });
+
 
 });
 
