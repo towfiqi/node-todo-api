@@ -2,6 +2,7 @@ const validator = require('validator');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcrypt');
 
 //Since we are going to modify this user schema, we are declaring the schema sepoerately, instead of directly declaring it in the model like we did in todos model. 
 var UserSchema = new mongoose.Schema({
@@ -18,6 +19,7 @@ var UserSchema = new mongoose.Schema({
         trim:true,
         unique: true,
         validate: {
+            isAsync: false,
             validator: validator.isEmail,
             message: "{VALUE} is not a valid email address.}"
         }, 
@@ -79,6 +81,24 @@ UserSchema.statics.findByToken = function(token){
     });
 
 };
+
+//Hash the User password before the saving the user in database
+UserSchema.pre('save', function(next){
+    var user = this;
+
+    if(user.isModified()){
+        bcrypt.genSalt(10, (err, salt)=> {
+            bcrypt.hash(user.password, salt, (err, hash)=>{
+                user.password = hash;
+                next();
+            });
+        });
+    }else{
+        next();
+    }
+
+});
+
 
 //User Row
 var User = mongoose.model('User', UserSchema);

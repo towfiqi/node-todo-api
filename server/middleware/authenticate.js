@@ -9,7 +9,7 @@ var authenticate = (req, res, next) => {
             return Promise.reject();
         }
 
-        //Modify the current request to add the found user and x-auth token to the user request so that the routes can user them (in server.js)
+        //Modify the current request to add the found user and x-auth token to the request so that the routes can use them (in server.js)
         req.user = user;
         req.token = token;
 
