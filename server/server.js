@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todos');
 var {User} = require('./models/users');
+var {authenticate} = require('./middleware/authenticate');
 
 var app = express();
 
@@ -120,7 +121,11 @@ app.post('/users', (req, res)=>{
         res.status(404).send(err);
     });
 
+});
 
+
+app.get('/users/me', authenticate, (req, res)=> {
+    res.send(req.user);
 });
 
 

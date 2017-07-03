@@ -50,7 +50,7 @@ UserSchema.methods.toJSON = function(){
 
 //Create generateAuthToken Method to automatically create token and secret on user registration. Not using arrow function becasue we will use `this`
 UserSchema.methods.generateAuthToken = function() {
-    var user = this;
+    var user = this; //here this is the single user since we are inside a method
     var access = 'auth'; 
     var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString(); //abc123 is the user secret key here.
 
@@ -61,6 +61,24 @@ UserSchema.methods.generateAuthToken = function() {
     });
 };
 
+//User Token verification - create a new static method to find users by token
+UserSchema.statics.findByToken = function(token){
+    var User = this;  //here this is the User Model since we are inside an instance
+    var decoded;
+
+    try{
+        decoded = jwt.verify(token, 'abc123')
+    }catch(e){
+        return Promise.reject();
+    }
+    //If the jwt verification is successful in above try catch error, query the user by token and id and send it with `return`
+    return User.findOne( {
+        '_id': decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
+    });
+
+};
 
 //User Row
 var User = mongoose.model('User', UserSchema);
