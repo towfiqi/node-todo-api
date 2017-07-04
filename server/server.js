@@ -8,6 +8,7 @@ var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todos');
 var {User} = require('./models/users');
 var {authenticate} = require('./middleware/authenticate');
+var bcrypt = require('bcrypt');
 
 var app = express();
 
@@ -118,7 +119,7 @@ app.post('/users', (req, res)=>{
     }).then( (token)=> {
         res.header('x-auth', token).send(newUser); 
     }).catch((err)=> {
-        res.status(404).send(err);
+        res.status(400).send(err);
     });
 
 });
@@ -126,6 +127,21 @@ app.post('/users', (req, res)=>{
 
 app.get('/users/me', authenticate, (req, res)=> {
     res.send(req.user);
+});
+
+app.post('/users/login', (req, res)=>{
+    var body = _.pick(req.body, ['email', 'password']);
+    //res.send(body);
+    
+    User.findByCredentials(body.email, body.password).then((user)=>{
+        return user.generateAuthToken().then( (token)=>{
+            res.header('x-auth', token).send(user);
+        });
+    }).catch((e)=> {
+        res.status(400).send();
+    });
+
+
 });
 
 

@@ -8,7 +8,7 @@ const bcrypt = require('bcrypt');
 var UserSchema = new mongoose.Schema({
     name: {
         type: String, 
-        required: true, 
+        required: false, 
         minlength: 1, 
         trim:true
     },
@@ -21,7 +21,7 @@ var UserSchema = new mongoose.Schema({
         validate: {
             isAsync: false,
             validator: validator.isEmail,
-            message: "{VALUE} is not a valid email address.}"
+            message: "{VALUE} is not a valid email address."
         }, 
     },
     password: {
@@ -50,7 +50,7 @@ UserSchema.methods.toJSON = function(){
 };
 
 
-//Create generateAuthToken Method to automatically create token and secret on user registration. Not using arrow function becasue we will use `this`
+//Create generateAuthToken instance Method to automatically create token and secret on user registration. Not using arrow function becasue we will use `this`
 UserSchema.methods.generateAuthToken = function() {
     var user = this; //here this is the single user since we are inside a method
     var access = 'auth'; 
@@ -63,7 +63,7 @@ UserSchema.methods.generateAuthToken = function() {
     });
 };
 
-//User Token verification - create a new static method to find users by token
+//User Token verification - create a new model method to find users by token.
 UserSchema.statics.findByToken = function(token){
     var User = this;  //here this is the User Model since we are inside an instance
     var decoded;
@@ -82,11 +82,37 @@ UserSchema.statics.findByToken = function(token){
 
 };
 
-//Hash the User password before the saving the user in database
+ //Login by credentials Model Method. Here promise is used to send the rejected error to server.js
+UserSchema.statics.findByCredentials = function(email, password){
+    var User = this;
+
+    return User.findOne({email}).then((user)=>{
+        if(!user){
+            return Promise.reject();
+        }
+
+        
+         return new Promise((resolve, reject)=>{
+            bcrypt.compare(password, user.password, (err, res)=>{
+                if(res){
+                     resolve(user);
+                }else{
+                     reject();
+                }
+            });
+        });
+
+    });
+
+
+};
+
+
+//Hash the User password before the saving the user in database. Since `.pre` is a middleware, we need to use `next`.
 UserSchema.pre('save', function(next){
     var user = this;
 
-    if(user.isModified()){
+    if(user.isModified('password')){
         bcrypt.genSalt(10, (err, salt)=> {
             bcrypt.hash(user.password, salt, (err, hash)=>{
                 user.password = hash;
