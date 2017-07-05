@@ -63,6 +63,21 @@ UserSchema.methods.generateAuthToken = function() {
     });
 };
 
+// Remove Token instance method.
+UserSchema.methods.removeToken = function(token) {
+    var user = this;
+
+    return user.update({
+        $pull : {
+            tokens:{
+                token: token
+            }
+            
+        }
+    });
+
+};
+
 //User Token verification - create a new model method to find users by token.
 UserSchema.statics.findByToken = function(token){
     var User = this;  //here this is the User Model since we are inside an instance

@@ -144,6 +144,19 @@ app.post('/users/login', (req, res)=>{
 
 });
 
+//Delete user generated token on logout. The authenticate middleware was used to access the user's token
+app.delete('/users/me/token', authenticate, (req, res) =>{
+    var user = req.user;
+
+    user.removeToken(req.token).then(()=> {
+        res.status(200).send();
+    }).catch( (e)=> {
+        res.send(400).send();
+    });
+
+
+});
+
 
 app.listen(port, ()=>{
     console.log(`Server Running at port ${port}`);
