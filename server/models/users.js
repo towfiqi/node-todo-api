@@ -111,7 +111,7 @@ UserSchema.statics.findByCredentials = function(email, password){
 //Hash the User password before the saving the user in database. Since `.pre` is a middleware, we need to use `next`.
 UserSchema.pre('save', function(next){
     var user = this;
-
+    //isModified is true when there is no value.
     if(user.isModified('password')){
         bcrypt.genSalt(10, (err, salt)=> {
             bcrypt.hash(user.password, salt, (err, hash)=>{

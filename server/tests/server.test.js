@@ -238,7 +238,7 @@ describe('POST /users', ()=> {
 
     });
 
-    it('should return 401 when invalid email and password supplied', (done)=>{
+    it('should return 400 when invalid email and password supplied', (done)=>{
         var name = "Test";
         var email = 'abc12';
         var password = '123';
@@ -251,13 +251,67 @@ describe('POST /users', ()=> {
 
     });
 
-    it('should return 401 when existing email used to create account', (done)=>{
+    it('should return 400 when existing email used to create account', (done)=>{
         request(app)
         .post('/users')
         .send({"email": users[0].email, "password":"Password123"})
         .expect(400)
         .end(done);
 
+    });
+
+});
+
+describe('POST /users/login', ()=> {
+
+    it('should login user and return the auth token', (done)=>{
+        request(app)
+        .post('/users/login')
+        .send({email: users[1].email, password: users[1].password, })
+        .expect(200)
+        .expect( (res)=> {
+            expect(res.headers['x-auth']).toExist();
+        })
+        .end( (err, res)=> {
+            if(err){
+                return done(err);
+            }
+
+            User.findById(users[1]._id).then( (user)=> {
+                expect(user.tokens[0]).toInclude({
+                    access: 'auth',
+                    token: res.headers['x-auth']
+                });
+
+                done();
+            }).catch( (e)=> {
+                done(e);
+            });
+
+        });
+    });
+
+    it('should reject invalid login', (done)=>{
+        request(app)
+        .post('/users/login')
+        .send({email: users[1].email, password: "123"})
+        .expect(400)
+        .expect( (res)=> {
+            expect(res.headers['x-auth']).toNotExist();
+        })
+        .end( (err)=> {
+            if(err){
+               return done(err);
+            }
+
+            User.findById(users[1]._id).then( (user)=>{
+                expect(user.tokens.length).toBe(0);
+                done();
+            }).catch( (e)=> {
+            done(e);
+        });
+
+        });
     });
 
 });
